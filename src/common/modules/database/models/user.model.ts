@@ -34,10 +34,10 @@ export class User{
     phoneNo: string;
     
     @Prop({ type: Boolean, default: false})
-    isEmailVerfied: boolean;
+    isEmailVerified: boolean;
     
     @Prop({ type: Boolean, default: false})
-    isPhoneVerfied: boolean;
+    isPhoneVerified: boolean;
     
     @Prop({ type: String, required: true})
     password: string;

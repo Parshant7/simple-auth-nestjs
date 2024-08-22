@@ -7,6 +7,7 @@ import { Request } from "express";
 import { Reflector } from "@nestjs/core";
 import { IS_PUBLIC_KEY, TYPES_KEY } from "../decorators/index.decorators";
 import { userType } from "../enums";
+import { DatabaseService } from "../modules/database/database.service";
 
 
 @Injectable()
@@ -14,7 +15,8 @@ export class AuthGuard implements CanActivate{
   constructor(
     private reflector: Reflector,
     private commonService: CommonService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private readonly db: DatabaseService
   ){}
   async canActivate(context: ExecutionContext): Promise<boolean>{
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -33,6 +35,9 @@ export class AuthGuard implements CanActivate{
 
     const decodedToken = this.jwtService.verify(token);
     console.log("decoded Token ", decodedToken);
+    
+    const sessionDetails = await this.db.session.findOne({token: decodedToken});
+    if(!sessionDetails) throw new Unauthorized();
 
     const userDetail = await this.commonService.getUserDetails(decodedToken);
     if(!userDetail) throw new Unauthorized();

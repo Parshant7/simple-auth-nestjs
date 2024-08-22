@@ -1,14 +1,16 @@
 import { Body, Controller, Post, Req, UseGuards } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { DatabaseService } from "src/common/modules/database/database.service";
-import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ForgotPasswordDto, ResetPasswordDto, UserLoginDto, UserSignupDto } from "./dto/auth.dto";
 import { Request } from "express";
 import { AuthGuard } from "src/common/guards/auth.guard";
-import { Public, UserType } from "src/common/decorators/index.decorators";
+import { Public, Token, User, UserType } from "src/common/decorators/index.decorators";
 import { userType } from "src/common/enums";
+import { userDocument } from "src/common/modules/database/models/user.model";
 
 @ApiTags('auth')
+@ApiBearerAuth('authentication')
 @UseGuards(AuthGuard)
 @UserType(userType.admin, userType.user)
 @Controller("auth")
@@ -46,8 +48,13 @@ export class AuthController{
         return await this.authService.resetPassword(body);
     }
 
+    @ApiOperation({summary: "Logout"})
+    @Post('/logout')
+    async logout(@User() user: userDocument, @Token() token: string) {
+        return await this.authService.logout(user, token);
+    }
+
     @ApiOperation({summary: "temp"})
-    @ApiBearerAuth('authentication')
     @Post('/temp')
     async temp(@Req() req: Request) {
         console.log(req.user);

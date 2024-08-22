@@ -24,7 +24,7 @@ export class AdminService{
             phoneNo: "9877065169",
             type: userType.admin,
             isEmailVerified: true,
-            isPhoneVerfied: true,
+            isPhoneVerified: true,
             password: password,
             createdAt: moment().utc().valueOf()
         }

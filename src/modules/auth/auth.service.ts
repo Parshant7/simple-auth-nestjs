@@ -4,10 +4,11 @@ import { ForgotPasswordDto, ResetPasswordDto, UserLoginDto, UserSignupDto } from
 import { hashSync, genSaltSync, compareSync} from "bcrypt";
 import { customResponses } from '../../common/constants/response-message';
 import { CommonService, OtpService } from "src/common/modules/common/common.service";
-import { otpType, tokenType } from "src/common/enums";
+import { otpType, tokenType, userType } from "src/common/enums";
 import * as moment from "moment";
 import { userIdentifier } from "src/common/interfaces/user.interface";
 import { config } from "dotenv";
+import { userDocument } from "src/common/modules/database/models/user.model";
 config();
 
 @Injectable()
@@ -20,6 +21,9 @@ export class AuthService{
 
     signupUser = async (data: UserSignupDto)=> {
         console.log(data);
+        if(!data.email && !(data.countryCode && data.phoneNo)){
+            throw new BadRequestException(customResponses.EmailOrPhoneNotProvider);
+        }
         await this.checkUserExists(data);
         const password = await this.encryptPassword(data.password);
         const newUser = await this.db.users.create({...data, password});
@@ -36,13 +40,26 @@ export class AuthService{
         console.log(isValid);
         if(!isValid) throw new BadRequestException(customResponses.IncorrectPassword);;
 
-        const payload = {
+        const tokenPayload = {
             _id: userDetail._id,
             tokenType: tokenType.authToken,
             tokenGenAt: moment().utc().valueOf(),
             userType: userDetail.type            
         };
-        const token = this.commonService.signToken(payload, tokenType.authToken);
+        const token = this.commonService.signToken(tokenPayload, tokenType.authToken);
+
+        const sessionPayload = {
+            userType: userDetail.type,
+            userId: userDetail._id,
+            device: data.device,
+            fcmToken: data.fcmToken,
+            accessToken: token,
+            createdAt: moment().utc().valueOf(),
+            updatedAt: moment().utc().valueOf()
+        }
+
+        await this.db.session.create(sessionPayload);
+
         return {token};
     }
 
@@ -74,6 +91,16 @@ export class AuthService{
         const password = await this.encryptPassword(data.password);
         await this.db.users.findByIdAndUpdate(otpDoc.userId,{password: password});
         return {msg: customResponses.PasswordResetSuccess};
+    }
+
+    logout = async (data: userDocument, token: string)=>{
+        const payload = {
+            _id: data._id
+        };
+        const logoutToken = this.commonService.signToken(payload, tokenType.logoutToken);
+        //delete from session
+        await this.db.session.findOneAndDelete({token: token});
+        return logoutToken;
     }
 
     checkUserExists = async (data: UserSignupDto)=>{

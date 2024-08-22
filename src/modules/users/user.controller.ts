@@ -12,7 +12,7 @@ export class UserController{
         private model: DatabaseService
     ){}
 
-    @ApiOperation({summary: "Creates new user"})
+    @ApiOperation({summary: "Creates new user", deprecated: true})
     @Post('/signup')
     async signup(@Body() payload: UserSignup) {
         return await this.userService.signupUser(payload);

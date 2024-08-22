@@ -3,6 +3,7 @@ import {IsEmail, IsString, IsObject, IsOptional, Validate} from "class-validator
 import { 
     IsEmailOrPhone, IsEmailOrPhoneConstraint 
 } from "../validators/index.validators";
+import { deviceType } from "src/common/enums";
 
 class Name {
     @ApiProperty({default: "Parshant"})
@@ -25,8 +26,9 @@ export class UserSignupDto {
     
     @ApiProperty({required: false})
     @IsEmail()
+    @IsOptional()
     email: string;
-
+    
     @ApiProperty({default: "+91"})
     @IsString()
     @IsOptional()
@@ -51,6 +53,16 @@ export class UserLoginDto {
     @ApiProperty({default: "abcd@1234"})
     @IsString()
     password: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    fcmToken: string;
+
+    @ApiProperty({ enum: deviceType})
+    @IsOptional()
+    device: deviceType;
+
 }
 
 export class ForgotPasswordDto {

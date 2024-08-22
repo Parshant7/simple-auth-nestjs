@@ -21,7 +21,7 @@ export class AdminController{
         await this.adminService.createAdmin();
     }
 
-    @Put("/update-user")
+    @Put("update-user")
     async updateUser(@Body() dto: UpdateStatusDto){
         return await this.adminService.updateStatus(dto);
     }
